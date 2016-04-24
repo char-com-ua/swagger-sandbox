@@ -1,0 +1,120 @@
+swagger: '2.0'
+info:
+  description: 'This user auth validation service service'
+  version: 1.0.0
+  title: User
+basePath: /services/user
+tags:
+  - name: user
+    description: Operations about user
+schemes:
+  - http
+produces:
+  - application/json
+consumes:
+  - application/json
+paths:
+  /validateCredentials:
+    post:
+      tags:
+        - user
+      operationId: validateCredentials
+      summary: validates user credentials.
+      description: 'for implementation details see OBI.pkg_portal_user2.sp_validate_user_credentials_t on 172.30.19.143'
+      parameters:
+        - name: validateCredentials
+          in: body
+          required: true
+          schema:
+            type: object
+            required:
+              - username
+              - password
+            properties:
+              username:
+                type: string
+                description: the username
+              password:
+                type: string
+                description: the password
+      responses:
+        '200':
+          description: validateCredentialsResponse
+          schema:
+            $ref: '#/definitions/ValidationResponse'
+      security:
+        - local: []
+  /validateMemword:
+    post:
+      tags:
+        - user
+      operationId: validateMemword
+      summary: validates two letters from memorized word of the user.
+      description: for implementation details see OBI.pkg_portal_user2.dt_validate_memorable_word_t on 172.30.19.143
+      parameters:
+        - name: validateMemword
+          in: body
+          required: true
+          schema:
+            type: object
+            properties:
+              username:
+                type: string
+                description: the username
+              memword:
+                $ref: '#/definitions/Memword'
+      responses:
+        '200':
+          description: response
+          schema:
+            $ref: '#/definitions/ValidationResponse'
+      security:
+        - local: []
+
+securityDefinitions:
+  local:
+    type: basic
+    description: HTTP Basic Authentication. Works over `HTTP` and `HTTPS`
+
+definitions:
+    
+  ValidationResponse:
+    type: object
+    properties:
+      code:
+        $ref: '#/definitions/ValidationCode'
+      text:
+        description: text with code detalization
+        type: string
+      memword:
+        description: structure provided only if memorized word is required for user (code=memword). char1pos and char2pos are filled.
+        $ref: '#/definitions/Memword'
+      
+  Memword:
+    type: object
+    required:
+      - char1pos
+      - char2pos
+    properties:
+      char1pos:
+        type: integer
+        description: first 1-based symbol position that client have to provide from memword
+      char1:
+        type: string
+        description: character for position char1pos
+      char2pos:
+        type: integer
+        description: second 1-based symbol position that client have to provide from memword
+      char2:
+        type: string
+        description: character for position char1pos
+        
+  ValidationCode:
+    description: validation response code. success - login successful. memword - memorized word required. failAuth - failed to match input data (username/pass or memword chars). failLocked - account is locked. fail - other failures.
+    type: string
+    enum:
+      - success
+      - memword
+      - failAuth
+      - failLocked
+      - fail
